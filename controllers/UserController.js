@@ -91,13 +91,29 @@ class userController {
     async recoverPassword(request, response) {
         let email = request.body.email;
         let result = await PasswordToken.create(email);
-
+        console.log(result);
         if(result.status) {
-            response.stats(200);
+            response.status(200);
             response.send('' + result.token);
         } else {
             response.status(406);
             response.send(result.error);
+        }
+    }
+
+    async changePassword(request, response) {
+        let token = request.body.token;
+        let password = request.body.password;
+
+        let IsValid = await PasswordToken.validate(token);
+
+        if(IsValid.status) {
+            await User.changePassword(password, IsValid.token.user_id, IsValid.token.token);
+            response.status(200);
+            response.send('Senha alterada');
+        } else {
+            response.status(406);
+            response.send('Invalid token');
         }
     }
 }

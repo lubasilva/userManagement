@@ -1,6 +1,6 @@
 const knex = require("../database/connection");
 const bcrypt = require("bcrypt");
-const { where } = require("../database/connection");
+const PasswordToken = require("./PasswordToken");
 
 class User {
   async findAll() {
@@ -35,13 +35,9 @@ class User {
 
   async findByEmail(email) {
     try {
-      let result = await knex
-        .select(["id", "name", "email", "role"])
-        .where({ email: email })
-        .table("users");
-
+      let result = await knex.select(["id", "name", "email", "role"]).where({email:email}).table("users");
       if (result.length > 0) {
-        return result;
+        return result[0];
       } else {
         return undefined;
       }
@@ -134,6 +130,12 @@ class User {
         error: "O Usário não existe, impossivel deletar",
       };
     }
+  }
+
+  async changePassword(newPassword, id, token) {
+    let hash = await bcrypt.hash(newPassword, 10);
+    await knex.update({password: hash}).where({id:id}).table('users');
+    await PasswordToken.setUsed(token);
   }
 }
 
